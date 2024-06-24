@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMNLP Assignment 1</title>
+</head>
+<body>
+
+<h4>Author: Kateryna Lutsai</h4>
+
+<h2>English data</h2>
+<ul>
+    <li><a href="texts/TEXTEN1.txt">Source text</a></li>
+    <li><a href="texts/EN_train.txt">Training set</a></li>
+    <li><a href="texts/EN_heldout.txt">Held out set</a></li>
+    <li><a href="texts/EN_test.txt">Test set</a></li>
+</ul>
+
+<h2>Czech data</h2>
+<ul>
+    <li><a href="texts/TEXTCZ1.txt">Source text</a></li>
+    <li><a href="texts/CZ_train.txt">Training set</a></li>
+    <li><a href="texts/CZ_heldout.txt">Held out set</a></li>
+    <li><a href="texts/CZ_test.txt">Test set</a></li>
+</ul>
+
+<h2>English stats</h2>
+<ul>
+    <li>
+        <a href="tables/EN_stats.txt">Source text stats</a>
+        <object type="text/plain" data="tables/EN_stats.txt" width="50%" height="150px">
+            <p>Unable to load the file.</p>
+        </object>
+    </li>
+    <li>
+        <a href="tables/EN_char_mess.txt">Characters messed up entropy</a>
+        <img src="graphs/EN_char_mess.png" alt="graphs/EN_char_mess" width="50%">
+    </li>
+    <li>
+        <a href="tables/EN_word_mess.txt">Words messed up entropy</a>
+        <img src="graphs/EN_word_mess.png" alt="graphs/EN_word_mess" width="50%">
+    </li>
+    <li>
+        <a href="tables/EN_adj_lambda_stats.txt">Lambda adjustments entropy</a>
+        <img src="graphs/EN_adj_lambda_stats.png" alt="graphs/EN_adj_lambda_stats" width="50%">
+    </li>
+</ul>
+
+<h2>Czech stats</h2>
+<ul>
+    <li>
+        <a href="tables/CZ_stats.txt">Source text stats</a>
+        <object type="text/plain" data="tables/CZ_stats.txt" width="50%" height="150px">
+            <p>Unable to load the file.</p>
+        </object>
+    </li>
+        <a href="tables/CZ_char_mess.txt">Characters messed up entropy</a>
+        <img src="graphs/CZ_char_mess.png" alt="graphs/CZ_char_mess" width="50%">
+    </li>
+    <li>
+        <a href="tables/CZ_word_mess.txt">Words messed up entropy</a>
+        <img src="graphs/CZ_word_mess.png" alt="graphs/CZ_word_mess" width="50%">
+    </li>
+    <li>
+        <a href="tables/CZ_adj_lambda_stats.txt">Lambda adjustments entropy</a>
+        <img src="graphs/CZ_adj_lambda_stats.png" alt="graphs/CZ_adj_lambda_stats" width="50%">
+    </li>
+</ul>
+
+<h2>Source code</h2>
+<ul>
+    <li><a href="script.py">Main script</a></li>
+    <li><a href="util.py">Utils (functions) script</a></li>
+</ul>
+
+<h2>Languages comparison</h2>
+
+<a href="tables/stats.txt">Source texts stats</a>
+<object type="text/plain" data="tables/stats.txt" width="50%" height="150px">
+    <p>Unable to load the file.</p>
+</object>
+
+<p>Tabulate, graph and explain your results. Also try to explain the differences between the two languages. To substantiate your explanations, you might want to tabulate also the basic characteristics of the two texts, such as the word count, number of characters (total, per word), the frequency of the most frequent words, the number of words with frequency 1, etc.</p>
+
+<p>Tabulate, graph and explain what you have got. Also, try to explain the differences between the two languages based on similar statistics as in the Task No. 2, plus the "coverage" graph (defined as the percentage of words in the test data which have been seen in the training data).</p>
+
+</body>
+</html>

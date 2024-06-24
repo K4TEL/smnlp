@@ -1,0 +1,8 @@
+stat	value
+words	222412.0
+chars_total	1282079.0
+chars_word	5.76443267449598
+highest_word_freq	13788.0
+rare_words_count	21160.0
+cond_entropy	4.973465923975694
+perplexity	16.0
