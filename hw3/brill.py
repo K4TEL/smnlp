@@ -4,6 +4,7 @@ from nltk.corpus.reader import TaggedCorpusReader
 import random
 import pickle
 import os
+import csv
 
 # Function to load and split the data
 def load_and_split_data(file_path: str, cz: bool = False) -> (list, list, list):
@@ -55,20 +56,49 @@ def train_brill_tagger(train_sents: list[list[str]], max_rules: int = 200, min_s
     baseline_tagger = BigramTagger(train_sents, backoff=UnigramTagger(train_sents))
 
     # Define Brill's templates
-    templates = [
-        brill.Template(brill.Pos([-1])),  # Previous tag
-        brill.Template(brill.Pos([1])),  # Next tag
-        brill.Template(brill.Pos([-2])),  # Previous previous tag
-        brill.Template(brill.Pos([2])),  # Next next tag
-        brill.Template(brill.Pos([-2, -1])),  # Previous tags
-        brill.Template(brill.Pos([1, 2])),  # Next tags
-        brill.Template(brill.Word([-1])),  # Previous word
-        brill.Template(brill.Word([1])),  # Next word
-        brill.Template(brill.Word([-2])),  # Previous previous word
-        brill.Template(brill.Word([2])),  # Next next word
-        brill.Template(brill.Word([-2, -1])),  # Previous words
-        brill.Template(brill.Word([1, 2])),  # Next words
-    ]
+    templates = []
+    for span in range(-2, 3):
+        templates.append(brill.Template(brill.Word([span])))
+
+        span_end = span + 1
+        while span_end < 3:
+            templates.append(brill.Template(brill.Word([span, span_end])))
+
+            if span < 1:
+                templates.append(brill.Template(brill.Pos([span]), brill.Word([span, span_end])))
+
+                if span_end < 1:
+                    templates.append(brill.Template(brill.Pos([span, span_end]), brill.Word([span, span_end])))
+
+            if span_end-span < 3:
+                extra_pos = span - 2 if span > -1 else span_end + 2
+                if extra_pos > 0 and span_end > 0:
+                    pass
+                else:  # only -2 or 2
+                    templates.append(brill.Template(brill.Word([span, span_end]), brill.Word([extra_pos])))
+
+                    if extra_pos < 0:
+                        templates.append(brill.Template(brill.Word([span, span_end]), brill.Word([extra_pos]), brill.Pos([extra_pos])))
+
+            span_end += 1
+
+        if span < 1:
+            templates.append(brill.Template(brill.Pos([span])))
+            templates.append(brill.Template(brill.Pos([span]), brill.Word([span])))
+
+        span_end = span + 1
+        while span_end < 1:
+            templates.append(brill.Template(brill.Pos([span, span_end])))
+            span_end += 1
+
+        if span == -2:
+            templates.append(brill.Template(brill.Pos([span]), brill.Pos([0])))
+            templates.append(brill.Template(brill.Pos([span]), brill.Pos([0]), brill.Word([span])))
+
+            span_end = span + 1
+            while span_end < 3:
+                templates.append(brill.Template(brill.Pos([span]), brill.Pos([0]), brill.Word([span, span_end])))
+                span_end += 1
 
     # Initialize the Brill tagger trainer
     trainer = brill_trainer.BrillTaggerTrainer(baseline_tagger, templates, trace=2)
@@ -117,40 +147,59 @@ def load_tagger(file_name: str) -> brill.BrillTagger:
         tagger = pickle.load(f)
     return tagger
 
+# Function to write results to CSV
+def write_results_to_csv(results: list[dict], file_name: str):
+    with open(file_name, mode='w', newline='', encoding='utf-8') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=['LANG', 'STD', 'ACC'])
+        writer.writeheader()
+        writer.writerows(results)
+
 # Main function to execute the process
-def corpus_process(source_file: str, cz: bool = False):
-    # Load and split the data
+def corpus_process(source_file: str, language: str, cz: bool = False):
+    results = []
+
     data_T, data_H, data_S = load_and_split_data(source_file, cz)
 
-    print(f'Train: {len(data_T)} words')
-    print(f'Heldout: {len(data_H)} words')
-    print(f'Test: {len(data_S)} words')
-
-    # Prepare datasets
     train_sents, smooth_sents, test_sents = prepare_datasets(data_T, data_H, data_S)
-
-    print(f'Train: {len(train_sents)} sentences')
-    print(f'Heldout: {len(smooth_sents)} sentences')
-    print(f'Test: {len(test_sents)} sentences')
 
     # Train the Brill tagger
     brill_tagger = train_brill_tagger(train_sents)
 
-    # Evaluate the tagger
-    accuracy = evaluate_tagger(brill_tagger, test_sents)
-    print(f'Test Accuracy: {accuracy:.4f}')
+    tagger_rules = brill_tagger.rules()
+
+    with open(f"{language}_rules.txt", "w") as f:
+        for rule in tagger_rules:
+            f.write(f"{rule}\n")
+
+    # Evaluate the tagger on test data
+    test_accuracy = evaluate_tagger(brill_tagger, test_sents)
+    results.append({'LANG': language, 'STD': 0, 'ACC': test_accuracy})
 
     # Perform cross-validation
-    accuracies, mean_accuracy, std_dev = cross_validation(data_T + data_H + data_S)
-    print(f'Cross-average Accuracy: {mean_accuracy:.4f}')
+    cross_val_accuracies, mean_acc, mean_std = cross_validation(data_T + data_H + data_S)
 
+    results.append({'LANG': language, 'STD': mean_std, 'ACC': mean_acc})
+
+    for i, accuracy in enumerate(cross_val_accuracies, start=1):
+        print(f"Cross-validation fold {i}: {accuracy}")
+        # results.append({'LANG': language, 'ITER': i, 'ACC': accuracy})
+
+    return results
 
 if __name__ == "__main__":
-    # Load data
     english_file = "TEXTEN2.ptg"
     czech_file = "TEXTCZ2.ptg"
 
-    corpus_process(english_file)
+    all_results = []
 
-    corpus_process(czech_file, True)
+    # Process English corpus
+    english_results = corpus_process(english_file, "EN")
+    all_results.extend(english_results)
+
+    # Process Czech corpus
+    czech_results = corpus_process(czech_file, "CZ", cz=True)
+    all_results.extend(czech_results)
+
+    # Write results to CSV
+    write_results_to_csv(all_results, "brill_results.csv")
 
